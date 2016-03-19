@@ -1,0 +1,4 @@
+Name: rpivotTable Gadget
+Description: Pivot Table and tools
+Binding: rpivotAddin
+Interactive: true

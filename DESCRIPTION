@@ -1,8 +1,12 @@
 Package: rpivotGadget
 Type: Package
-Title: What the Package Does (Title Case)
+Title: rpivotTable gadget add-in for RStudio
 Version: 0.1.0
 Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: More about what it does (maybe more than one line)
+Description: Gadget (miniUI) interface to the rpivotTable htmlwidget
 License: What license is it under?
 LazyData: TRUE
+Imports:
+  shiny (>= 0.13),
+  miniUI (>= 0.1.1),
+  rstudioapi (>= 0.5)
