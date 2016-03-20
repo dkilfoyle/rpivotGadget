@@ -18,7 +18,7 @@ rpivotAddin <- function() {
   ui <- miniPage(
     gadgetTitleBar("Pivot Table Gadget"),
 
-    miniTabstripPanel(
+    miniTabstripPanel(id="gadgetTabstrip",
 
       miniTabPanel("Pivot", icon = icon("table"),
         miniContentPanel(
@@ -48,13 +48,13 @@ rpivotAddin <- function() {
     })
 
     output$mypivot <- renderRpivotTable({
-     rpivotTable(getSelectedDF(), onRefresh=htmlwidgets::JS("function(config) { Shiny.onInputChange('myPivotData', config); }"))
+      rpivotTable(getSelectedDF(), onRefresh=htmlwidgets::JS("function(config) { Shiny.onInputChange('myPivotData', config); }"))
+      # updateTabsetPanel(session, "gadgetTabstrip", selected="pivot")
     })
 
     output$pivotRefresh <- renderText({
 
       cnames <- list("cols","rows","vals", "exclusions","inclusions", "aggregatorName", "rendererName")
-      # Apply a function to all keys, to get corresponding values
       allvalues <- lapply(cnames, function(name) {
         item <- input$myPivotData[[name]]
         if (is.list(item)) {
@@ -64,6 +64,16 @@ rpivotAddin <- function() {
         }
       })
       paste(allvalues, collapse = "\n")
+    })
+
+    output$rcode = renderText({
+      if (length(input$myPivotData[["rows"]])==1 & input$myPivotData[["aggregatorName"]] =="Count") {
+        # if rendererName
+        mycode = '
+            df %>%
+              group_by("rows[[1]]") %>%
+              summarise(n=n())'
+      }
     })
 
     observeEvent(input$done, {
