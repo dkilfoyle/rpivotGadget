@@ -17,33 +17,38 @@ rpivotAddin <- function() {
 
   ui <- miniPage(
     gadgetTitleBar("Pivot Table Gadget"),
+
     miniTabstripPanel(
-      miniTabPanel("Pivot", icon = icon("sliders"),
+
+      miniTabPanel("Pivot", icon = icon("table"),
         miniContentPanel(
           rpivotTableOutput("mypivot")
         )
       ),
-      miniTabPanel("Data", icon = icon("table"),
+
+      miniTabPanel("Setup", icon = icon("bars"),
         miniContentPanel(
-          DT::dataTableOutput("table")
-        )
-      ),
-      miniTabPanel("PivotData", icon = icon("table"),
-        miniContentPanel(
-          verbatimTextOutput("pivotRefresh")
+          fillRow(
+            fillCol(
+              selectInput("dataset", "Dataframe:", choices=getDataFrames()),
+              verbatimTextOutput("pivotRefresh"),
+              verbatimTextOutput("rcode")
+            )
+          )
         )
       )
+
     )
   )
 
   server <- function(input, output, session) {
 
-    output$mypivot <- renderRpivotTable({
-     rpivotTable(iris, onRefresh=htmlwidgets::JS("function(config) { Shiny.onInputChange('myPivotData', config); }"))
+    getSelectedDF <- reactive({
+      eval(parse(text=input$dataset))
     })
 
-    output$table <- DT::renderDataTable({
-      diamonds
+    output$mypivot <- renderRpivotTable({
+     rpivotTable(getSelectedDF(), onRefresh=htmlwidgets::JS("function(config) { Shiny.onInputChange('myPivotData', config); }"))
     })
 
     output$pivotRefresh <- renderText({
