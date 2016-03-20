@@ -3,6 +3,7 @@ library(rpivotTable)
 library(DT)
 library(miniUI)
 library(whisker)
+library(shinyAce)
 
 list_to_string <- function(obj, listname) {
   if (is.null(names(obj))) {
@@ -36,10 +37,10 @@ rpivotAddin <- function() {
       miniTabPanel("Setup", icon = icon("bars"),
         miniContentPanel(
           fillRow(
-            fillCol(
+            fillCol(flex=c(NA,1,2),
               selectInput("dataset", "Dataframe:", choices=getDataFrames()),
               verbatimTextOutput("pivotRefresh"),
-              verbatimTextOutput("rcode")
+              aceEditor("rcode", "# R code will appear here", mode="r" )
             )
           )
         )
@@ -73,10 +74,10 @@ rpivotAddin <- function() {
       paste(allvalues, collapse = "\n")
     })
 
-    output$rcode = renderText({
+    observeEvent(input$myPivotData, {
       if (length(input$myPivotData[["rows"]])==1 & input$myPivotData[["aggregatorName"]] =="Count") {
         # if rendererName
-        whisker.render(tmplSummariseN, list(df = input$dataset, groupby = input$myPivotData[["rows"]][1]))
+        updateAceEditor(session, "rcode", whisker.render(tmplSummariseN, list(df = input$dataset, groupby = input$myPivotData[["rows"]][1])))
       }
     })
 
