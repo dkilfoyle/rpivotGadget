@@ -2,6 +2,7 @@ library(shiny)
 library(rpivotTable)
 library(DT)
 library(miniUI)
+library(whisker)
 
 list_to_string <- function(obj, listname) {
   if (is.null(names(obj))) {
@@ -12,6 +13,12 @@ list_to_string <- function(obj, listname) {
       sep = "", collapse = "\n")
   }
 }
+
+tmplSummariseN = '
+{{df}} %>%
+  group_by({{groupby}}) %>%
+  summarise(n=n())
+'
 
 rpivotAddin <- function() {
 
@@ -69,10 +76,7 @@ rpivotAddin <- function() {
     output$rcode = renderText({
       if (length(input$myPivotData[["rows"]])==1 & input$myPivotData[["aggregatorName"]] =="Count") {
         # if rendererName
-        mycode = '
-            df %>%
-              group_by("rows[[1]]") %>%
-              summarise(n=n())'
+        whisker.render(tmplSummariseN, list(df = input$dataset, groupby = input$myPivotData[["rows"]][1]))
       }
     })
 
