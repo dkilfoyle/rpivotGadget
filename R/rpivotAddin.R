@@ -29,8 +29,14 @@ list_to_string <- function(obj, listname) {
 tmplSummariseN =
   '# selected = {{groupby}}
 {{df}} %>%
-group_by({{groupby}}) %>%
-summarise(n=n())'
+  group_by({{groupby}}) %>%
+  summarise(n=n())'
+
+tmplSummariseAvg =
+  '# selected = {{groupby}}, {{vals}}
+{{df}} %>%
+  group_by({{groupby}}) %>%
+  summarise(n=n(), {{agg}}={{agg}}({{vals}}, na.rm=T))'
 
 rpivotAddin <- function() {
   ui <- miniPage(
@@ -111,13 +117,29 @@ rpivotAddin <- function() {
     })
 
     observeEvent(input$myPivotData, {
-      if (length(input$myPivotData[["rows"]]) == 1 &
-          input$myPivotData[["aggregatorName"]] == "Count") {
-        # if rendererName
-        updateAceEditor(session,
-          "rcode",
+
+      template=NULL
+
+      if (length(input$myPivotData[["rows"]]) == 1) {
+
+        if (input$myPivotData[["aggregatorName"]] == "Count") {
+          template = whisker.render(tmplSummariseN, list(df=input$dataset, groupby=input$myPivotData[["rows"]][1]))
+        }
+
+        if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
+          template = whisker.render(tmplSummariseAvg, list(
+            df=input$dataset,
+            groupby=input$myPivotData[["rows"]][1],
+            vals=input$myPivotData[["vals"]][1],
+            agg=c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))])
+          )
+        }
+      }
+
+      if (!is.null(template)) {
+        updateAceEditor(session,  "rcode",
           whisker.render(
-            tmplSummariseN,
+            template,
             list(
               df = input$dataset,
               groupby = input$myPivotData[["rows"]][1]
