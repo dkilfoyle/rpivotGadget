@@ -32,7 +32,7 @@ tmplSummariseN =
   group_by({{groupby}}) %>%
   summarise(n=n())'
 
-tmplSummariseAvg =
+tmplSummariseAgg =
   '# selected = {{groupby}}, {{vals}}
 {{df}} %>%
   group_by({{groupby}}) %>%
@@ -127,7 +127,7 @@ rpivotAddin <- function() {
         }
 
         if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
-          template = whisker.render(tmplSummariseAvg, list(
+          template = whisker.render(tmplSummariseAgg, list(
             df=input$dataset,
             groupby=input$myPivotData[["rows"]][1],
             vals=input$myPivotData[["vals"]][1],
