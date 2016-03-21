@@ -79,24 +79,14 @@ rpivotAddin <- function() {
     output$mypivot <- renderRpivotTable({
       rpivotTable(
         getSelectedDF(),
-        onRefresh = htmlwidgets::JS(
-          "function(config) { Shiny.onInputChange('myPivotData', config); }"
-        )
+        onRefresh = htmlwidgets::JS("function(config) { Shiny.onInputChange('myPivotData', config); }")
       )
       # updateTabsetPanel(session, "gadgetTabstrip", selected="pivot")
     })
 
     output$pivotRefresh <- renderText({
       cnames <-
-        list(
-          "cols",
-          "rows",
-          "vals",
-          "exclusions",
-          "inclusions",
-          "aggregatorName",
-          "rendererName"
-        )
+        list("cols", "rows", "vals", "exclusions", "inclusions", "aggregatorName", "rendererName")
       allvalues <- lapply(cnames, function(name) {
         item <- input$myPivotData[[name]]
         if (is.list(item)) {
