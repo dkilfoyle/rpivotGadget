@@ -4,6 +4,7 @@ library(DT)
 library(miniUI)
 library(whisker)
 library(shinyAce)
+library(rstudioapi)
 
 list_to_string <- function(obj, listname) {
   if (is.null(names(obj))) {
@@ -36,11 +37,12 @@ rpivotAddin <- function() {
 
       miniTabPanel("Setup", icon = icon("bars"),
         miniContentPanel(
-          fillRow(
-            fillCol(flex=c(NA,1,2),
+          fillPage(
+            fillCol(flex=c(NA,NA,NA,NA),
               selectInput("dataset", "Dataframe:", choices=getDataFrames()),
               verbatimTextOutput("pivotRefresh"),
-              aceEditor("rcode", "# R code will appear here", mode="r" )
+              aceEditor("rcode", "# R code will appear here", mode="r" ),
+              fillRow(actionButton("code2clipboard", "Copy to clipboard", icon("clipboard"), width="100%"), actionButton("code2console", "Execute in console", icon("play"), width="100%"))
             )
           )
         )
@@ -72,6 +74,14 @@ rpivotAddin <- function() {
         }
       })
       paste(allvalues, collapse = "\n")
+    })
+
+    observeEvent(input$code2clipboard, {
+      writeClipboard(input$rcode)
+    })
+
+    observeEvent(input$code2console, {
+      sendToConsole(input$rcode)
     })
 
     observeEvent(input$myPivotData, {
