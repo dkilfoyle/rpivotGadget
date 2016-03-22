@@ -36,7 +36,8 @@ tmplSummariseAgg =
   '# selected = {{groupby}}, {{vals}}
 {{df}} %>%
   group_by({{groupby}}) %>%
-  summarise(n=n(), {{agg}}={{agg}}({{vals}}, na.rm=T))'
+  summarise(n=n(), {{agg}}={{agg}}({{vals}}, na.rm=T)) {{#bar}} %>%
+    ggplot2(aes(x={{groupby}}, y={{agg}})) + geom_bar(stat="identity") {{/bar}}'
 
 rpivotAddin <- function() {
   ui <- miniPage(
@@ -67,7 +68,6 @@ rpivotAddin <- function() {
           actionButton("code2console", "Execute in console", icon("play"))
         )
       )
-
     )
   )
 
@@ -110,21 +110,22 @@ rpivotAddin <- function() {
 
       template=NULL
 
-      if (length(input$myPivotData[["rows"]]) == 1) {
+        if (length(input$myPivotData[["rows"]]) == 1) {
 
-        if (input$myPivotData[["aggregatorName"]] == "Count") {
-          template = whisker.render(tmplSummariseN, list(df=input$dataset, groupby=input$myPivotData[["rows"]][1]))
-        }
+          if (input$myPivotData[["aggregatorName"]] == "Count") {
+            template = whisker.render(tmplSummariseN, list(df=input$dataset, groupby=input$myPivotData[["rows"]][1]))
+          }
 
-        if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
-          template = whisker.render(tmplSummariseAgg, list(
-            df=input$dataset,
-            groupby=input$myPivotData[["rows"]][1],
-            vals=input$myPivotData[["vals"]][1],
-            agg=c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))])
-          )
+          else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
+            template = whisker.render(tmplSummariseAgg, list(
+              df=input$dataset,
+              groupby=input$myPivotData[["rows"]][1],
+              vals=input$myPivotData[["vals"]][1],
+              agg=c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
+              bar=(input$myPivotData[["rendererName"]]=="Bar Chart"))
+            )
+          }
         }
-      }
 
       if (!is.null(template)) {
         updateAceEditor(session,  "rcode",
