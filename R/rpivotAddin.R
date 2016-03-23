@@ -6,7 +6,7 @@ library(whisker)
 library(shinyAce)
 library(rstudioapi)
 
-# options(shiny.trace=TRUE)
+options(shiny.trace=F)
 
 list_to_string <- function(obj, listname) {
   if (is.null(names(obj))) {
@@ -121,6 +121,12 @@ rpivotAddin <- function() {
 
     observeEvent(input$code2console, {
       sendToConsole(input$rcode)
+    })
+
+    observeEvent(input$gadgetTabstrip, {
+      if (input$gadgetTabstrip == "Setup") {
+        stopApp(TRUE) # input$miniTabstrip is broken in miniui/shiny
+      }
     })
 
     getRcode = reactive({
