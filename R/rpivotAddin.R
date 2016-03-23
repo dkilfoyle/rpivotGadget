@@ -125,9 +125,15 @@ rpivotAddin <- function() {
 
     observeEvent(input$gadgetTabstrip, {
       if (input$gadgetTabstrip == "Setup") {
-        stopApp(TRUE) # input$miniTabstrip is broken in miniui/shiny
+        # hack to fix ace editor not firing change event when update is called but editor not visible
+        updateAceEditor(session,  "rcode", getRcode())
       }
     })
+
+    # observe({
+    #   updateAceEditor(session,  "rcode", getRcode())
+    #   # TODO: fix aceeditor offscreen update problem. ? need to call editor.resize when tab shown
+    # })
 
     getRcode = reactive({
       template=NULL
@@ -150,11 +156,6 @@ rpivotAddin <- function() {
         }
       }
       return(template)
-    })
-
-    observe({
-      updateAceEditor(session,  "rcode", getRcode())
-      # TODO: fix aceeditor offscreen update problem. ? need to call editor.resize when tab shown
     })
 
     observeEvent(input$done, {
