@@ -28,9 +28,15 @@ list_to_string <- function(obj, listname) {
 
 tmplSummariseN =
   '# selected = {{groupby}}
+{{^bar}}
 {{df}} %>%
   group_by({{groupby}}) %>%
-  summarise(n=n())'
+  summarise(n=n())
+{{/bar}}{{#bar}}
+ggplot({{df}}, aes(x={{groupby}})) +
+  geom_bar()
+{{/bar}}
+'
 
 tmplSummariseAgg =
   '# selected = {{groupby}}, {{vals}}
@@ -41,7 +47,16 @@ tmplSummariseAgg =
 
 rpivotAddin <- function() {
   ui <- miniPage(
-    gadgetTitleBar("Pivot Table Gadget"),
+
+    tags$head(tags$style(HTML("
+      .gadget-title .shiny-input-container {
+        position: relative;
+        height: 30px;
+        margin: 6px 10px 0;
+        z-index: 10;
+      }"))),
+
+    gadgetTitleBar("Pivot Table Gadget", left=miniTitleBarButton("done", "Done", primary=T), right=selectInput("dataset",NULL, choices = getDataFrames())),
 
     miniTabstripPanel(
       id = "gadgetTabstrip",
@@ -49,7 +64,10 @@ rpivotAddin <- function() {
       miniTabPanel(
         "Pivot",
         icon = icon("table"),
-        miniContentPanel(rpivotTableOutput("mypivot"))
+        miniContentPanel(
+
+          rpivotTableOutput("mypivot")
+          )
       ),
 
       miniTabPanel(
@@ -57,8 +75,7 @@ rpivotAddin <- function() {
         icon = icon("bars"),
         miniContentPanel(
           fillCol(
-            flex = c(NA, NA, 1),
-            selectInput("dataset", "Dataframe:", choices = getDataFrames()),
+            flex = c(NA, 1),
             verbatimTextOutput("pivotRefresh"),
             aceEditor("rcode", "# R code will appear here", mode = "r", height="100%")
           )
@@ -110,10 +127,13 @@ rpivotAddin <- function() {
 
       template=NULL
 
+
         if (length(input$myPivotData[["rows"]]) == 1) {
 
           if (input$myPivotData[["aggregatorName"]] == "Count") {
-            template = whisker.render(tmplSummariseN, list(df=input$dataset, groupby=input$myPivotData[["rows"]][1]))
+            template = whisker.render(tmplSummariseN, list(df=input$dataset,
+              groupby=input$myPivotData[["rows"]][1],
+              bar=(input$myPivotData[["rendererName"]]=="Bar Chart")))
           }
 
           else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
