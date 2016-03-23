@@ -6,6 +6,8 @@ library(whisker)
 library(shinyAce)
 library(rstudioapi)
 
+# options(shiny.trace=TRUE)
+
 list_to_string <- function(obj, listname) {
   if (is.null(names(obj))) {
     paste(listname,
@@ -58,8 +60,7 @@ rpivotAddin <- function() {
 
     gadgetTitleBar("Pivot Table Gadget", left=miniTitleBarButton("done", "Done", primary=T), right=selectInput("dataset",NULL, choices = getDataFrames())),
 
-    miniTabstripPanel(
-      id = "gadgetTabstrip",
+    miniTabstripPanel(id = "gadgetTabstrip",
 
       miniTabPanel(
         "Pivot",
@@ -86,7 +87,7 @@ rpivotAddin <- function() {
         )
       )
     )
-  )
+  ) # minipage
 
   server <- function(input, output, session) {
     getSelectedDF <- reactive({
@@ -98,7 +99,6 @@ rpivotAddin <- function() {
         getSelectedDF(),
         onRefresh = htmlwidgets::JS("function(config) { Shiny.onInputChange('myPivotData', config); }")
       )
-      # updateTabsetPanel(session, "gadgetTabstrip", selected="pivot")
     })
 
     output$pivotRefresh <- renderText({
@@ -123,46 +123,39 @@ rpivotAddin <- function() {
       sendToConsole(input$rcode)
     })
 
-    observeEvent(input$myPivotData, {
-
+    getRcode = reactive({
       template=NULL
+      if (length(input$myPivotData[["rows"]]) == 1) {
 
-
-        if (length(input$myPivotData[["rows"]]) == 1) {
-
-          if (input$myPivotData[["aggregatorName"]] == "Count") {
-            template = whisker.render(tmplSummariseN, list(df=input$dataset,
-              groupby=input$myPivotData[["rows"]][1],
-              bar=(input$myPivotData[["rendererName"]]=="Bar Chart")))
-          }
-
-          else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
-            template = whisker.render(tmplSummariseAgg, list(
-              df=input$dataset,
-              groupby=input$myPivotData[["rows"]][1],
-              vals=input$myPivotData[["vals"]][1],
-              agg=c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
-              bar=(input$myPivotData[["rendererName"]]=="Bar Chart"))
-            )
-          }
+        if (input$myPivotData[["aggregatorName"]] == "Count") {
+          template = whisker.render(tmplSummariseN, list(df=input$dataset,
+            groupby=input$myPivotData[["rows"]][1],
+            bar=(input$myPivotData[["rendererName"]]=="Bar Chart")))
         }
 
-      if (!is.null(template)) {
-        updateAceEditor(session,  "rcode",
-          whisker.render(
-            template,
-            list(
-              df = input$dataset,
-              groupby = input$myPivotData[["rows"]][1]
-            )
-          ))
+        else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
+          template = whisker.render(tmplSummariseAgg, list(
+            df=input$dataset,
+            groupby=input$myPivotData[["rows"]][1],
+            vals=input$myPivotData[["vals"]][1],
+            agg=c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
+            bar=(input$myPivotData[["rendererName"]]=="Bar Chart"))
+          )
+        }
       }
+      return(template)
+    })
+
+    observe({
+      updateAceEditor(session,  "rcode", getRcode())
+      # TODO: fix aceeditor offscreen update problem. ? need to call editor.resize when tab shown
     })
 
     observeEvent(input$done, {
       stopApp(TRUE)
     })
-  }
+
+  } # server
 
   runGadget(shinyApp(ui, server), viewer = paneViewer())
 }
