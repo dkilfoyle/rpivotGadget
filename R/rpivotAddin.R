@@ -83,6 +83,7 @@ rpivotAddin <- function() {
         ),
         miniButtonBlock(
           actionButton("code2clipboard", "Copy to clipboard", icon("clipboard")),
+          actionButton("code2doc", "Copy to editor", icon("align-left")),
           actionButton("code2console", "Execute in console", icon("play"))
         )
       )
@@ -119,8 +120,13 @@ rpivotAddin <- function() {
       writeClipboard(input$rcode)
     })
 
+    observeEvent(input$code2doc, {
+      insertText(input$rcode)
+    })
+
     observeEvent(input$code2console, {
       sendToConsole(input$rcode)
+      stopApp(TRUE)
     })
 
     observeEvent(input$gadgetTabstrip, {
