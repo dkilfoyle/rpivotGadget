@@ -153,7 +153,12 @@ rpivotAddin <- function() {
       }
       else if (pd$rendererName == "Bar Chart") {
         if (pd[["aggregatorName"]] == "Count") {
-          template = whisker.render(tmplBarCount, wdata)
+          if (!is.na(wdata$group3))
+            template = whisker.render(tmplBarCount3, wdata) # faceted dodged
+          else if (!is.na(wdata$group2))
+            template = whisker.render(tmplBarCount2, wdata) # dodged
+          else
+            template = whisker.render(tmplBarCount1, wdata) # simple bar
         }
         else if (pd[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
           if (!is.na(wdata$group3))

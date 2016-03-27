@@ -12,10 +12,23 @@ tmplTableAgg =
   summarise(n=n(), {{vals}}.{{agg}}={{agg}}({{vals}}, na.rm=T)) {{#bar}} %>%
     ggplot2(aes(x={{groupby}}, y={{vals}}.{{agg}})) + geom_bar(stat="identity") {{/bar}}'
 
-tmplBarCount =
+tmplBarCount1 =
 '# grouped by {{groupby}}
-ggplot({{df}}, aes(x={{groupby}})) +
-    geom_bar()
+ggplot({{df}}, aes(x={{group1}})) +
+  geom_bar()
+'
+
+tmplBarCount2 =
+  '# grouped by {{groupby}}
+ggplot({{df}}, aes(x={{group1}}, fill={{group2}})) +
+  geom_bar(position="dodge")
+'
+
+tmplBarCount3 =
+  '# grouped by {{groupby}}
+ggplot({{df}}, aes(x={{group1}}, fill={{group2}})) +
+  facet_grid(. ~{{group3}}) +
+  geom_bar(position="dodge")
 '
 
 tmplBarAgg1 =
