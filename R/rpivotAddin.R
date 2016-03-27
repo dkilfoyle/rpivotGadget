@@ -29,28 +29,6 @@ list_to_string <- function(obj, listname) {
   }
 }
 
-tmplSummariseN =
-  '# selected = {{groupby}}
-{{^bar}}
-{{df}} %>%
-  group_by({{groupby}}) %>%
-  summarise(n=n())
-{{/bar}}{{#bar}}
-ggplot({{df}}, aes(x={{groupby}})) +
-  geom_bar()
-{{/bar}}
-'
-
-tmplSummariseN2 ='
-# hello
-'
-
-tmplSummariseAgg =
-  '# selected = {{groupby}}, {{vals}}
-{{df}} %>%
-  group_by({{groupby}}) %>%
-  summarise(n=n(), {{agg}}={{agg}}({{vals}}, na.rm=T)) {{#bar}} %>%
-    ggplot2(aes(x={{groupby}}, y={{agg}})) + geom_bar(stat="identity") {{/bar}}'
 
 
 
@@ -139,39 +117,53 @@ rpivotAddin <- function() {
     observeEvent(input$gadgetTabstrip, {
       if (input$gadgetTabstrip == "Setup") {
         # hack to fix ace editor not firing change event when update is called but editor not visible
+        # instead force update only once the aceeditor containing tab is activated
         updateAceEditor(session,  "rcode", getRcode())
       }
     })
 
-    # observe({
-    #   updateAceEditor(session,  "rcode", getRcode())
-    #   # TODO: fix aceeditor offscreen update problem. ? need to call editor.resize when tab shown
-    # })
-
     getRcode = reactive({
       template=NULL
-      # if (length(input$myPivotData[["rows"]]) == 1) {
-      #
-      #   if (input$myPivotData[["aggregatorName"]] == "Count") {
-      #     template = whisker.render(tmplSummariseN, list(df=input$dataset,
-      #       groupby=input$myPivotData[["rows"]][1],
-      #       bar=(input$myPivotData[["rendererName"]]=="Bar Chart")))
-      #   }
-      #
-      #   else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
-      #     template = whisker.render(tmplSummariseAgg, list(
-      #       df=input$dataset,
-      #       groupby=input$myPivotData[["rows"]][1],
-      #       vals=input$myPivotData[["vals"]][1],
-      #       agg=c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
-      #       bar=(input$myPivotData[["rendererName"]]=="Bar Chart"))
-      #     )
-      #   }
-      # }
 
-      pd=input$myPivotData
-      template=capture.output(brew(text=tmplSummariseN2))
-      cat(template)
+      pd = input$myPivotData
+
+      if (length(pd$rows) + length(pd$cols) == 0) {
+        # nothing selected = quit
+        return (NULL)
+      }
+
+      wdata = list(
+        df=input$dataset,
+        groupby=paste(c(unlist(pd$rows), unlist(pd$cols)), collapse=","),
+        group1 = c(unlist(pd$rows), unlist(pd$cols))[1],
+        group2 = c(unlist(pd$rows), unlist(pd$cols))[2],
+        group3 = c(unlist(pd$rows), unlist(pd$cols))[3],
+        vals=paste(pd$vals, collapse=","),
+        agg = c("mean","min","max","sum")[match(pd[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))]
+      )
+
+      if (pd$rendererName == "Table") {
+        if (pd[["aggregatorName"]] == "Count") {
+          template = whisker.render(tmplTableCount, wdata)
+        }
+        else if (pd[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
+          template = whisker.render(tmplTableAgg, wdata)
+
+        }
+      }
+      else if (pd$rendererName == "Bar Chart") {
+        if (pd[["aggregatorName"]] == "Count") {
+          template = whisker.render(tmplBarCount, wdata)
+        }
+        else if (pd[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
+          if (!is.na(wdata$group3))
+            template = whisker.render(tmplBarAgg3, wdata) # faceted dodged
+          else if (!is.na(wdata$group2))
+            template = whisker.render(tmplBarAgg2, wdata) # dodged
+          else
+            template = whisker.render(tmplBarAgg1, wdata) # simple bar
+        }
+      }
 
       return(template)
     })
