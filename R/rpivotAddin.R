@@ -5,6 +5,7 @@ library(miniUI)
 library(whisker)
 library(shinyAce)
 library(rstudioapi)
+library(brew)
 
 options(shiny.trace=F)
 
@@ -40,12 +41,18 @@ ggplot({{df}}, aes(x={{groupby}})) +
 {{/bar}}
 '
 
+tmplSummariseN2 ='
+# hello
+'
+
 tmplSummariseAgg =
   '# selected = {{groupby}}, {{vals}}
 {{df}} %>%
   group_by({{groupby}}) %>%
   summarise(n=n(), {{agg}}={{agg}}({{vals}}, na.rm=T)) {{#bar}} %>%
     ggplot2(aes(x={{groupby}}, y={{agg}})) + geom_bar(stat="identity") {{/bar}}'
+
+
 
 rpivotAddin <- function() {
   ui <- miniPage(
@@ -143,24 +150,29 @@ rpivotAddin <- function() {
 
     getRcode = reactive({
       template=NULL
-      if (length(input$myPivotData[["rows"]]) == 1) {
+      # if (length(input$myPivotData[["rows"]]) == 1) {
+      #
+      #   if (input$myPivotData[["aggregatorName"]] == "Count") {
+      #     template = whisker.render(tmplSummariseN, list(df=input$dataset,
+      #       groupby=input$myPivotData[["rows"]][1],
+      #       bar=(input$myPivotData[["rendererName"]]=="Bar Chart")))
+      #   }
+      #
+      #   else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
+      #     template = whisker.render(tmplSummariseAgg, list(
+      #       df=input$dataset,
+      #       groupby=input$myPivotData[["rows"]][1],
+      #       vals=input$myPivotData[["vals"]][1],
+      #       agg=c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
+      #       bar=(input$myPivotData[["rendererName"]]=="Bar Chart"))
+      #     )
+      #   }
+      # }
 
-        if (input$myPivotData[["aggregatorName"]] == "Count") {
-          template = whisker.render(tmplSummariseN, list(df=input$dataset,
-            groupby=input$myPivotData[["rows"]][1],
-            bar=(input$myPivotData[["rendererName"]]=="Bar Chart")))
-        }
+      pd=input$myPivotData
+      template=capture.output(brew(text=tmplSummariseN2))
+      cat(template)
 
-        else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
-          template = whisker.render(tmplSummariseAgg, list(
-            df=input$dataset,
-            groupby=input$myPivotData[["rows"]][1],
-            vals=input$myPivotData[["vals"]][1],
-            agg=c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
-            bar=(input$myPivotData[["rendererName"]]=="Bar Chart"))
-          )
-        }
-      }
       return(template)
     })
 
