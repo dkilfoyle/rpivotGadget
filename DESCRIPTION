@@ -9,4 +9,9 @@ LazyData: TRUE
 Imports:
   shiny (>= 0.13),
   miniUI (>= 0.1.1),
-  rstudioapi (>= 0.5)
+  rstudioapi (>= 0.5),
+  ggplot2 (>= 2.1.0),
+  dplyr (>= 0.4.3),
+  shinyAce (>= 0.2.1),
+  whisker (>= 0.3-2)
+
