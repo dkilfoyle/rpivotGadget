@@ -9,26 +9,25 @@ tmplTableAgg =
 # aggregated to = {{vals}}
 {{df}} %>%
   group_by({{groupby}}) %>%
-  summarise(n=n(), {{vals}}.{{agg}}={{agg}}({{vals}}, na.rm=T)) {{#bar}} %>%
-    ggplot2(aes(x={{groupby}}, y={{vals}}.{{agg}})) + geom_bar(stat="identity") {{/bar}}'
+  summarise(n=n(), {{vals}}.{{agg}}={{agg}}({{vals}}, na.rm=T))'
 
 tmplBarCount1 =
 '# grouped by {{groupby}}
-ggplot({{df}}, aes(x={{group1}})) +
+ggplot({{df}}, aes(x=as.factor({{group1}}))) +
   geom_bar()
 '
 
 tmplBarCount2 =
   '# grouped by {{groupby}}
-ggplot({{df}}, aes(x={{group1}}, fill={{group2}})) +
-  geom_bar(position="dodge")
+ggplot({{df}}, aes(x=as.factor({{group1}}), fill=as.factor({{group2}}))) +
+  geom_bar({{#bar}}position="dodge"{{/bar}})
 '
 
 tmplBarCount3 =
   '# grouped by {{groupby}}
-ggplot({{df}}, aes(x={{group1}}, fill={{group2}})) +
+ggplot({{df}}, aes(x=as.factor({{group1}}), fill=as.factor({{group2}}))) +
   facet_grid(. ~{{group3}}) +
-  geom_bar(position="dodge")
+  geom_bar({{#bar}}position="dodge"{{/bar}})
 '
 
 tmplBarAgg1 =
@@ -37,7 +36,7 @@ tmplBarAgg1 =
 {{df}} %>%
   group_by({{groupby}}) %>%
   summarise(n=n(), {{vals}}.{{agg}}={{agg}}({{vals}}, na.rm=T)) %>%
-    ggplot2(aes(x={{groupby}}, y={{vals}}.{{agg}})) + geom_bar(stat="identity")
+    ggplot2(aes(x=as.factor({{groupby}}), y={{vals}}.{{agg}})) + geom_bar(stat="identity")
 '
 
 tmplBarAgg2 =
@@ -46,7 +45,7 @@ tmplBarAgg2 =
 {{df}} %>%
   group_by({{groupby}}) %>%
   summarise(n=n(), {{vals}}.{{agg}}={{agg}}({{vals}}, na.rm=T)) %>%
-    ggplot(aes(x={{group1}}, fill={{group2}}, y={{vals}}.{{agg}})) + geom_bar(stat="identity", position="dodge")
+    ggplot(aes(x=as.factor({{group1}}), fill=as.factor({{group2}}), y={{vals}}.{{agg}})) + geom_bar(stat="identity"{{#bar}}, position="dodge"{{/bar}})
 '
 
 tmplBarAgg3 =
@@ -55,15 +54,6 @@ tmplBarAgg3 =
 {{df}} %>%
   group_by({{groupby}}) %>%
   summarise(n=n(), {{vals}}.{{agg}}={{agg}}({{vals}}, na.rm=T)) %>%
-    ggplot(aes(x={{group1}}, fill={{group2}}, y={{vals}}.{{agg}})) + geom_bar(stat="identity", position="dodge") + facet_grid(. ~{{group3}})
+    ggplot(aes(x=as.factor({{group1}}), fill=as.factor({{group2}}), y={{vals}}.{{agg}})) + geom_bar(stat="identity"{{#bar}}, position="dodge"{{/bar}}) + facet_grid(. ~{{group3}})
 '
 
-tmplStackedAgg2 =
-  '# grouped by  = {{groupby}}
-# aggregated to = {{vals}}
-{{df}} %>%
-  group_by({{groupby}}) %>%
-  summarise(n=n(), {{vals}}.{{agg}}={{agg}}({{vals}}, na.rm=T)) %>%
-  # mutate(group=paste0({{group1}}, "_", {{group2}})) %>%
-    ggplot(aes(x={{group1}}, fill={{group2}}, y={{vals}}.{{agg}})) + geom_bar(stat="identity")
-'

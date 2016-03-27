@@ -1,11 +1,10 @@
 library(shiny)
 library(rpivotTable)
-library(DT)
 library(miniUI)
 library(whisker)
 library(shinyAce)
 library(rstudioapi)
-library(brew)
+library(ggplot2)
 
 options(shiny.trace=F)
 
@@ -28,13 +27,21 @@ rpivotAddin <- function() {
         "Pivot",
         icon = icon("table"),
         miniContentPanel(
-
           rpivotTableOutput("mypivot")
-          )
+        )
       ),
 
       miniTabPanel(
-        "Setup",
+        "R Preview",
+        icon = icon("eye"),
+        miniContentPanel(
+          conditionalPanel(condition='input.myPivotData.rendererName=="Table"', tableOutput("table")),
+          conditionalPanel(condition='["Bar Chart","Stacked Bar Chart"].indexOf(input.myPivotData.rendererName) > -1', plotOutput("plot"))
+        )
+      ),
+
+      miniTabPanel(
+        "R Code",
         icon = icon("bars"),
         miniContentPanel(
           aceEditor("rcode", "# R code will appear here", mode = "r", height="100%")
@@ -45,13 +52,13 @@ rpivotAddin <- function() {
           actionButton("code2console", "Execute in console", icon("play"))
         )
       )
-    )
+
+    ) # minitabstrippanel
   ) # minipage
 
   server <- function(input, output, session) {
-    getSelectedDF <- reactive({
-      eval(parse(text = input$dataset))
-    })
+
+    # Outputs
 
     output$mypivot <- renderRpivotTable({
       rpivotTable(
@@ -59,6 +66,20 @@ rpivotAddin <- function() {
         onRefresh = htmlwidgets::JS("function(config) { Shiny.onInputChange('myPivotData', config); }")
       )
     })
+
+    output$table = renderTable({
+      code = getRcode()
+      x=eval(parse(text=code))
+      x
+    }, include.rownames=F)
+
+    output$plot = renderPlot({
+      code = getRcode()
+      x=eval(parse(text=code))
+      x
+    })
+
+    # EVENTS
 
     observeEvent(input$code2clipboard, {
       writeClipboard(input$rcode)
@@ -74,44 +95,53 @@ rpivotAddin <- function() {
     })
 
     observeEvent(input$gadgetTabstrip, {
-      if (input$gadgetTabstrip == "Setup") {
+      if (input$gadgetTabstrip == "R Code") {
         # hack to fix ace editor not firing change event when update is called but editor not visible
         # instead force update only once the aceeditor containing tab is activated
+        # TODO: try outputOptions - suspendWhenHidden = false
         updateAceEditor(session,  "rcode", getRcode())
       }
+    })
+
+    observeEvent(input$done, {
+      stopApp(TRUE)
+    })
+
+    # REACTIVES
+
+    getSelectedDF <- reactive({
+      eval(parse(text = input$dataset))
     })
 
     getRcode = reactive({
       template=NULL
 
-      pd = input$myPivotData
-
-      if (length(pd$rows) + length(pd$cols) == 0) {
+      if (length(input$myPivotData$rows) + length(input$myPivotData$cols) == 0) {
         # nothing selected = quit
         return (NULL)
       }
 
       wdata = list(
         df=input$dataset,
-        groupby=paste(c(unlist(pd$rows), unlist(pd$cols)), collapse=","),
-        group1 = c(unlist(pd$rows), unlist(pd$cols))[1],
-        group2 = c(unlist(pd$rows), unlist(pd$cols))[2],
-        group3 = c(unlist(pd$rows), unlist(pd$cols))[3],
-        vals=paste(pd$vals, collapse=","),
-        agg = c("mean","min","max","sum")[match(pd[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))]
+        groupby=paste(c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols)), collapse=","),
+        group1 = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))[1],
+        group2 = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))[2],
+        group3 = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))[3],
+        vals=paste(input$myPivotData$vals, collapse=","),
+        agg = c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))]
       )
 
-      if (pd$rendererName == "Table") {
-        if (pd[["aggregatorName"]] == "Count") {
+      if (input$myPivotData$rendererName == "Table") {
+        if (input$myPivotData[["aggregatorName"]] == "Count") {
           template = whisker.render(tmplTableCount, wdata)
         }
-        else if (pd[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
+        else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
           template = whisker.render(tmplTableAgg, wdata)
-
         }
       }
-      else if (pd$rendererName == "Bar Chart") {
-        if (pd[["aggregatorName"]] == "Count") {
+      else if (input$myPivotData$rendererName %in% c("Bar Chart","Stacked Bar Chart")) {
+        wdata$bar = (input$myPivotData$rendererName == "Bar Chart")
+        if (input$myPivotData[["aggregatorName"]] == "Count") {
           if (!is.na(wdata$group3))
             template = whisker.render(tmplBarCount3, wdata) # faceted dodged
           else if (!is.na(wdata$group2))
@@ -119,7 +149,7 @@ rpivotAddin <- function() {
           else
             template = whisker.render(tmplBarCount1, wdata) # simple bar
         }
-        else if (pd[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
+        else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
           if (!is.na(wdata$group3))
             template = whisker.render(tmplBarAgg3, wdata) # faceted dodged
           else if (!is.na(wdata$group2))
@@ -132,9 +162,7 @@ rpivotAddin <- function() {
       return(template)
     })
 
-    observeEvent(input$done, {
-      stopApp(TRUE)
-    })
+
 
   } # server
 
