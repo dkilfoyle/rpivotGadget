@@ -9,29 +9,6 @@ library(brew)
 
 options(shiny.trace=F)
 
-list_to_string <- function(obj, listname) {
-  if (is.null(names(obj))) {
-    paste(listname,
-      "[[",
-      seq_along(obj),
-      "]] = ",
-      obj,
-      sep = "",
-      collapse = "\n")
-  } else {
-    paste(listname,
-      "$",
-      names(obj),
-      " = ",
-      obj,
-      sep = "",
-      collapse = "\n")
-  }
-}
-
-
-
-
 rpivotAddin <- function() {
   ui <- miniPage(
 
@@ -60,11 +37,7 @@ rpivotAddin <- function() {
         "Setup",
         icon = icon("bars"),
         miniContentPanel(
-          fillCol(
-            flex = c(NA, 1),
-            verbatimTextOutput("pivotRefresh"),
-            aceEditor("rcode", "# R code will appear here", mode = "r", height="100%")
-          )
+          aceEditor("rcode", "# R code will appear here", mode = "r", height="100%")
         ),
         miniButtonBlock(
           actionButton("code2clipboard", "Copy to clipboard", icon("clipboard")),
@@ -85,20 +58,6 @@ rpivotAddin <- function() {
         getSelectedDF(),
         onRefresh = htmlwidgets::JS("function(config) { Shiny.onInputChange('myPivotData', config); }")
       )
-    })
-
-    output$pivotRefresh <- renderText({
-      cnames <-
-        list("cols", "rows", "vals", "exclusions", "inclusions", "aggregatorName", "rendererName")
-      allvalues <- lapply(cnames, function(name) {
-        item <- input$myPivotData[[name]]
-        if (is.list(item)) {
-          list_to_string(item, name)
-        } else {
-          paste(name, item, sep = " = ")
-        }
-      })
-      paste(allvalues, collapse = "\n")
     })
 
     observeEvent(input$code2clipboard, {
