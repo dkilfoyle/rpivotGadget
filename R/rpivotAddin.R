@@ -5,6 +5,7 @@ library(whisker)
 library(shinyAce)
 library(rstudioapi)
 library(ggplot2)
+library(dplyr)
 
 options(shiny.trace=F)
 
