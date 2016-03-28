@@ -35,8 +35,9 @@ rpivotAddin <- function() {
         "R Preview",
         icon = icon("eye"),
         miniContentPanel(
-          conditionalPanel(condition='input.myPivotData.rendererName=="Table"', tableOutput("table")),
-          conditionalPanel(condition='["Bar Chart","Stacked Bar Chart"].indexOf(input.myPivotData.rendererName) > -1', plotOutput("plot"))
+          conditionalPanel(condition='output.getOutputType=="Table"', tableOutput("table")),
+          conditionalPanel(condition='output.getOutputType=="Plot"', plotOutput("plot")),
+          conditionalPanel(condition='output.getOutputType=="Text"', verbatimTextOutput("rtext"))
         )
       ),
 
@@ -58,6 +59,8 @@ rpivotAddin <- function() {
 
   server <- function(input, output, session) {
 
+
+
     # Outputs
 
     output$mypivot <- renderRpivotTable({
@@ -68,15 +71,20 @@ rpivotAddin <- function() {
     })
 
     output$table = renderTable({
-      code = getRcode()
+      code = getR()$code
       x=eval(parse(text=code))
       x
-    }, include.rownames=F)
+    })
 
     output$plot = renderPlot({
-      code = getRcode()
+      code = getR()$code
       x=eval(parse(text=code))
       x
+    })
+
+    output$rtext = renderPrint({
+      code = getR()$code
+      print(eval(parse(text=code)))
     })
 
     # EVENTS
@@ -99,7 +107,7 @@ rpivotAddin <- function() {
         # hack to fix ace editor not firing change event when update is called but editor not visible
         # instead force update only once the aceeditor containing tab is activated
         # TODO: try outputOptions - suspendWhenHidden = false
-        updateAceEditor(session,  "rcode", getRcode())
+        updateAceEditor(session,  "rcode", getR()$code)
       }
     })
 
@@ -113,7 +121,11 @@ rpivotAddin <- function() {
       eval(parse(text = input$dataset))
     })
 
-    getRcode = reactive({
+    output$getOutputType = reactive({
+      getR()$wdata$renderer
+    })
+
+    getR = reactive({
       template=NULL
 
       if (length(input$myPivotData$rows) + length(input$myPivotData$cols) == 0) {
@@ -124,16 +136,26 @@ rpivotAddin <- function() {
       wdata = list(
         df=input$dataset,
         groupby=paste(c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols)), collapse=","),
+        groupbyPlus=paste(c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols)), collapse="+"),
         group1 = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))[1],
         group2 = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))[2],
         group3 = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))[3],
         vals=paste(input$myPivotData$vals, collapse=","),
-        agg = c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))]
+        agg = c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
+        renderer = "Table",
+        rown = length(input$myPivotData$rows),
+        coln = length(input$myPivotData$cols)
       )
 
       if (input$myPivotData$rendererName == "Table") {
         if (input$myPivotData[["aggregatorName"]] == "Count") {
-          template = whisker.render(tmplTableCount, wdata)
+          if (wdata$coln + wdata$rown <=2)
+            template = whisker.render(tmplTableCount, wdata)
+          else
+          {
+            wdata$renderer = "Text"
+            template = whisker.render(tmplTableFtable, wdata)
+          }
         }
         else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
           template = whisker.render(tmplTableAgg, wdata)
@@ -141,6 +163,7 @@ rpivotAddin <- function() {
       }
       else if (input$myPivotData$rendererName %in% c("Bar Chart","Stacked Bar Chart")) {
         wdata$bar = (input$myPivotData$rendererName == "Bar Chart")
+        wdata$renderer = "Plot"
         if (input$myPivotData[["aggregatorName"]] == "Count") {
           if (!is.na(wdata$group3))
             template = whisker.render(tmplBarCount3, wdata) # faceted dodged
@@ -159,7 +182,9 @@ rpivotAddin <- function() {
         }
       }
 
-      return(template)
+      outputOptions(output, 'getOutputType', suspendWhenHidden=FALSE)
+
+      return(list(code=template, wdata=wdata))
     })
 
 

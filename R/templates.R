@@ -1,9 +1,15 @@
 tmplTableCount =
 '# grouped by = {{groupby}}
 {{df}} %>%
-  group_by({{groupby}}) %>%
-  summarise(n=n())
-'
+  xtabs(~ {{groupbyPlus}}, .)
+# {{df}} %>%
+#   group_by({{groupby}}) %>%
+#   summarise(n=n())'
+
+tmplTableFtable =
+  '# grouped by = {{groupby}}
+ftable(xtabs(~ {{groupbyPlus}}, {{df}}))'
+
 tmplTableAgg =
 '# grouped by  = {{groupby}}
 # aggregated to = {{vals}}
