@@ -13,5 +13,6 @@ Imports:
   ggplot2 (>= 2.1.0),
   dplyr (>= 0.4.3),
   shinyAce (>= 0.2.1),
-  whisker (>= 0.3-2)
+  whisker (>= 0.3-2),
+  tidyr (>= 0.4.1)
 
