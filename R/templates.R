@@ -1,9 +1,13 @@
 tmplTableCount =
 '# grouped by = {{groupby}}
+{{#spread}}
 addmargins(xtabs(~ {{groupbyPlus}}, {{df}}),1:2)
-# {{df}} %>%
-#   group_by({{groupby}}) %>%
-#   summarise(n=n())'
+{{/spread}}
+{{^spread}}
+{{df}} %>%
+  group_by({{groupby}}) %>%
+  summarise(n=n())
+{{/spread}}'
 
 tmplTableFtable =
   '# grouped by = {{groupby}}
@@ -14,7 +18,8 @@ tmplTableAgg =
 # aggregated to = {{vals}}
 {{df}} %>%
   group_by({{groupby}}) %>%
-  summarise(n=n(), {{vals}}.{{agg}}={{agg}}({{vals}}, na.rm=T))'
+  summarise({{vals}}.{{agg}}={{agg}}({{vals}}, na.rm=T)) {{#spread}}{{#group2}}%>%
+  spread({{group2}}, {{vals}}.{{agg}}){{/group2}}{{/spread}}'
 
 tmplBarCount1 =
 '# grouped by {{groupby}}
