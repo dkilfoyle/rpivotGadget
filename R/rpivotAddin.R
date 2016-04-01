@@ -6,6 +6,7 @@ library(shinyAce)
 library(rstudioapi)
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 
 options(shiny.trace=F)
 
@@ -19,6 +20,14 @@ rpivotAddin <- function() {
         margin: 6px 10px 0;
         z-index: 10;
       }"))),
+
+    # a nasty hack to fix AceEditor bug that updated content wont display if updated while aceeditor invisible
+    tags$head(tags$script('Shiny.addCustomMessageHandler("resizeACE",
+      function(message) {
+        var $el = $("#rcode");
+        var editor = $el.data("aceEditor");
+        editor.resize();
+      })')),
 
     gadgetTitleBar("Pivot Table Gadget", left=miniTitleBarButton("done", "Done", primary=T), right=selectInput("dataset",NULL, choices = getDataFrames())),
 
@@ -38,7 +47,8 @@ rpivotAddin <- function() {
         miniContentPanel(
           conditionalPanel(condition='output.getOutputType=="Table"', tableOutput("table")),
           conditionalPanel(condition='output.getOutputType=="Plot"', plotOutput("plot")),
-          conditionalPanel(condition='output.getOutputType=="Text"', verbatimTextOutput("rtext"))
+          conditionalPanel(condition='output.getOutputType=="Text"', verbatimTextOutput("rtext")),
+          conditionalPanel(condition='output.getOutputType=="Undefined"', h3("No R conversion defined for this setting"))
         )
       ),
 
@@ -46,6 +56,7 @@ rpivotAddin <- function() {
         "R Code",
         icon = icon("bars"),
         miniContentPanel(
+          checkboxInput("spread","Spread", value=F),
           aceEditor("rcode", "# R code will appear here", mode = "r", height="100%")
         ),
         miniButtonBlock(
@@ -60,35 +71,28 @@ rpivotAddin <- function() {
 
   server <- function(input, output, session) {
 
+    values <- reactiveValues(outputType="Undefined")
 
-
-    # Outputs
+    # Outputs ==================================
 
     output$mypivot <- renderRpivotTable({
-      rpivotTable(
-        getSelectedDF(),
-        onRefresh = htmlwidgets::JS("function(config) { Shiny.onInputChange('myPivotData', config); }")
+      rpivotTable(getSelectedDF(), onRefresh = htmlwidgets::JS("function(config) { Shiny.onInputChange('myPivotData', config); }")
       )
     })
 
     output$table = renderTable({
-      code = getR()$code
-      x=eval(parse(text=code))
-      x
+      eval(parse(text=input$rcode))
     })
 
     output$plot = renderPlot({
-      code = getR()$code
-      x=eval(parse(text=code))
-      x
+      eval(parse(text=input$rcode))
     })
 
     output$rtext = renderPrint({
-      code = getR()$code
-      print(eval(parse(text=code)))
+      print(eval(parse(text=input$rcode)))
     })
 
-    # EVENTS
+    # EVENTS ==================================
 
     observeEvent(input$code2clipboard, {
       writeClipboard(input$rcode)
@@ -103,36 +107,30 @@ rpivotAddin <- function() {
       stopApp(TRUE)
     })
 
-    observeEvent(input$gadgetTabstrip, {
-      if (input$gadgetTabstrip == "R Code") {
-        # hack to fix ace editor not firing change event when update is called but editor not visible
-        # instead force update only once the aceeditor containing tab is activated
-        # TODO: try outputOptions - suspendWhenHidden = false
-        updateAceEditor(session,  "rcode", getR()$code)
-      }
-    })
-
     observeEvent(input$done, {
       stopApp(TRUE)
     })
 
-    # REACTIVES
+    # hack to force aceeditor to display contents - update content wont update display if called while div is not visible
+    observeEvent(input$gadgetTabstrip, {
+      if (input$gadgetTabstrip == "R Code")
+      {
+        session$sendCustomMessage("resizeACE", list())
+      }
+    })
+
+    # REACTIVES =================================
 
     getSelectedDF <- reactive({
       eval(parse(text = input$dataset))
     })
 
-    output$getOutputType = reactive({
-      getR()$wdata$renderer
+    output$getOutputType <- reactive({
+      values$outputType
     })
 
-    getR = reactive({
-      template=NULL
-
-      if (length(input$myPivotData$rows) + length(input$myPivotData$cols) == 0) {
-        # nothing selected = quit
-        return (NULL)
-      }
+    # getR <- reactive({
+    observe({
 
       wdata = list(
         df=input$dataset,
@@ -143,13 +141,21 @@ rpivotAddin <- function() {
         group3 = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))[3],
         vals=paste(input$myPivotData$vals, collapse=","),
         agg = c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
-        renderer = "Table",
+        renderer = "Undefined",
         rown = length(input$myPivotData$rows),
-        coln = length(input$myPivotData$cols)
+        coln = length(input$myPivotData$cols),
+        spread = input$spread
       )
+
+      if (wdata$rown + wdata$coln ==0) { #length(input$myPivotData$rows) + length(input$myPivotData$cols) == 0) {
+        # nothing selected = quit
+        updateAceEditor(session,  "rcode", "# R code will appear here")
+        return()
+      }
 
       if (input$myPivotData$rendererName == "Table") {
         if (input$myPivotData[["aggregatorName"]] == "Count") {
+          wdata$renderer="Table"
           if (wdata$coln + wdata$rown <=2)
             template = whisker.render(tmplTableCount, wdata)
           else
@@ -159,6 +165,7 @@ rpivotAddin <- function() {
           }
         }
         else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
+          wdata$renderer="Table"
           template = whisker.render(tmplTableAgg, wdata)
         }
       }
@@ -183,12 +190,12 @@ rpivotAddin <- function() {
         }
       }
 
-      outputOptions(output, 'getOutputType', suspendWhenHidden=FALSE)
+      updateAceEditor(session,  "rcode", template)
+      values$outputType = wdata$renderer
 
-      return(list(code=template, wdata=wdata))
     })
 
-
+    outputOptions(output, 'getOutputType', suspendWhenHidden=FALSE)
 
   } # server
 
