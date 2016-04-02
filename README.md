@@ -1,6 +1,6 @@
 ## rpivotGadget:  RStudio add-in for rpivotTable
 
-This package provide an RStudio add-in wrapper arount the [rpivotTable](https://github.com/smartinsightsfromdata/rpivotTable) HTML widget.
+This package provide an RStudio add-in wrapper around the [rpivotTable](https://github.com/smartinsightsfromdata/rpivotTable) HTML widget.
 
 ![Screenshot](Screenshot.JPG)
 
