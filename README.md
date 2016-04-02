@@ -2,7 +2,7 @@
 
 This package provide an RStudio add-in wrapper arount the [rpivotTable](https://github.com/smartinsightsfromdata/rpivotTable) HTML widget.
 
-![Screenshot](Screenshot.jpg)
+![Screenshot](Screenshot.JPG)
 
 #### Installation
 
