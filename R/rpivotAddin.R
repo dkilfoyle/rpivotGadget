@@ -132,37 +132,34 @@ rpivotAddin <- function() {
     # getR <- reactive({
     observe({
 
-      wdata = list(
-        df=input$dataset,
-        groupby=paste(c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols)), collapse=","),
-        groupbyPlus=paste(c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols)), collapse="+"),
-        group1 = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))[1],
-        group2 = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))[2],
-        group3 = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))[3],
-        vals=paste(input$myPivotData$vals, collapse=","),
-        agg = c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
-        renderer = "Undefined",
-        rown = length(input$myPivotData$rows),
-        coln = length(input$myPivotData$cols),
-        spread = input$spread
-      )
+      groups = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))
+      groups.n = length(groups)
 
-      if (wdata$rown + wdata$coln ==0) { #length(input$myPivotData$rows) + length(input$myPivotData$cols) == 0) {
-        # nothing selected = quit
+      if (groups.n==0) {        # nothing selected = quit
         updateAceEditor(session,  "rcode", "# R code will appear here")
         return()
       }
 
+      wdata = list(
+        df           = input$dataset,
+        groupby      = paste(groups, collapse=","),
+        groupbyPlus  = paste(groups, collapse="+"),
+        group1       = groups[1],
+        group2       = ifelse(groups.n > 1, groups[2], F),
+        group3       = ifelse(groups.n > 2, groups[3], F),
+        vals         = paste(input$myPivotData$vals, collapse=","),
+        agg          = c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
+        renderer     = "Undefined",
+        rown         = length(input$myPivotData$rows),
+        coln         = length(input$myPivotData$cols),
+        spread       = input$spread
+      )
+
       if (input$myPivotData$rendererName == "Table") {
         if (input$myPivotData[["aggregatorName"]] == "Count") {
           wdata$renderer="Table"
-          if (wdata$coln + wdata$rown <=2)
-            template = whisker.render(tmplTableCount, wdata)
-          else
-          {
-            wdata$renderer = "Text"
-            template = whisker.render(tmplTableFtable, wdata)
-          }
+          if (wdata$coln + wdata$rown >2) wdata$renderer = "Text"
+          template = whisker.render(tmplTableCount, wdata)
         }
         else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
           wdata$renderer="Table"

@@ -1,18 +1,9 @@
 tmplTableCount =
 '# grouped by = {{groupby}}
 {{#spread}}
-addmargins(xtabs(~ {{groupbyPlus}}, {{df}}),1:2)
+{{#group3}}ftable({{/group3}}addmargins(xtabs(~ {{groupbyPlus}}, {{df}})){{#group3}}){{/group3}}
 {{/spread}}{{^spread}}
 {{df}} %>%
-  group_by({{groupby}}) %>%
-  summarise(n=n())
-{{/spread}}'
-
-tmplTableFtable =
-  '# grouped by = {{groupby}}
-{{#spread}}ftable(addmargins(xtabs(~ {{groupbyPlus}}, {{df}})))
-{{/spread}}
-{{^spread}}{{df}} %>%
   group_by({{groupby}}) %>%
   summarise(n=n())
 {{/spread}}'
