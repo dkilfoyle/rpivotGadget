@@ -144,6 +144,8 @@ rpivotAddin <- function() {
         updateAceEditor(session,  "rcode", "# R code will appear here")
         return()
       }
+      else
+        template="# No R code for this pivotTable setting" # default template
 
       wdata = list(
         df           = input$dataset,
