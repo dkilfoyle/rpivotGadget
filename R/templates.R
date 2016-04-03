@@ -16,23 +16,10 @@ tmplTableAgg =
   summarise({{vals}}.{{agg}}={{agg}}({{vals}}, na.rm=T)) {{#spread}}{{#group2}}%>%
   spread({{group2}}, {{vals}}.{{agg}}){{/group2}}{{/spread}}'
 
-tmplBarCount1 =
+tmplBarCount =
 '# grouped by {{groupby}}
-ggplot({{df}}, aes(x=as.factor({{group1}}){{#group2}}, fill=as.factor({{group2}}){{\group2}})) +
-  {{#group3}}facet_grid(. ~{{group3}}) + {{\group3}}
-  geom_bar({{#bar}}position="dodge"{{/bar}})
-'
-
-tmplBarCount2 =
-  '# grouped by {{groupby}}
-ggplot({{df}}, aes(x=as.factor({{group1}}), fill=as.factor({{group2}}))) +
-  geom_bar({{#bar}}position="dodge"{{/bar}})
-'
-
-tmplBarCount3 =
-  '# grouped by {{groupby}}
-ggplot({{df}}, aes(x=as.factor({{group1}}), fill=as.factor({{group2}}))) +
-  facet_grid(. ~{{group3}}) +
+ggplot({{df}}, aes(x=as.factor({{group1}}){{#group2}}, fill=as.factor({{group2}}){{/group2}})) +
+  {{#group3}}facet_grid(. ~{{group3}}) + {{/group3}}
   geom_bar({{#bar}}position="dodge"{{/bar}})
 '
 
