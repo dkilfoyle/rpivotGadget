@@ -99,7 +99,7 @@ rpivotAddin <- function() {
       print(eval(parse(text=input$rcode)))
     })
 
-    output$datatable = renderDataTable(iris)
+    output$datatable = DT::renderDataTable(eval(parse(text=input$rcode)))
 
     # EVENTS ==================================
 
@@ -166,7 +166,7 @@ rpivotAddin <- function() {
         spread       = input$spread
       )
 
-      if (input$myPivotData$rendererName == "Table") {
+      if (input$myPivotData$rendererName %in% c("Table", "Table Barchart")) {
         if (input$myPivotData[["aggregatorName"]] == "Count") {
           if (wdata$coln + wdata$rown >2) wdata$renderer = "Text" else wdata$renderer="Table"
           template = whisker.render(tmplTableCount, wdata)
@@ -175,6 +175,7 @@ rpivotAddin <- function() {
           wdata$renderer="Table"
           template = whisker.render(tmplTableAgg, wdata)
         }
+        # TODO: else if rendererName == "Table Barchart" use datatables with format style ? how to in shiny
       }
       else if (input$myPivotData$rendererName %in% c("Bar Chart","Stacked Bar Chart")) {
         wdata$bar = (input$myPivotData$rendererName == "Bar Chart")
