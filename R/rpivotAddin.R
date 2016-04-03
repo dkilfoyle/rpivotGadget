@@ -170,15 +170,10 @@ rpivotAddin <- function() {
         wdata$bar = (input$myPivotData$rendererName == "Bar Chart")
         wdata$renderer = "Plot"
         if (input$myPivotData[["aggregatorName"]] == "Count") {
-          template = whisker.render(tmplBarCount1, wdata) # simple bar
+          template = whisker.render(tmplBarCount, wdata) # simple bar
         }
         else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
-          if (!is.na(wdata$group3))
-            template = whisker.render(tmplBarAgg3, wdata) # faceted dodged
-          else if (!is.na(wdata$group2))
-            template = whisker.render(tmplBarAgg2, wdata) # dodged
-          else
-            template = whisker.render(tmplBarAgg1, wdata) # simple bar
+          template = whisker.render(tmplBarAgg, wdata) # simple bar
         }
       }
 
