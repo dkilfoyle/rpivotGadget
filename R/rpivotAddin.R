@@ -99,7 +99,9 @@ rpivotAddin <- function() {
       print(eval(parse(text=input$rcode)))
     })
 
-    output$datatable = DT::renderDataTable(eval(parse(text=input$rcode)))
+    output$datatable = DT::renderDataTable(datatable(eval(parse(text=input$rcode))) %>%
+        formatStyle('n',  background = styleColorBar(eval(parse(text=input$rcode))$n, 'steelblue'))
+      )
 
     # EVENTS ==================================
 
@@ -175,7 +177,8 @@ rpivotAddin <- function() {
           wdata$renderer="Table"
           template = whisker.render(tmplTableAgg, wdata)
         }
-        # TODO: else if rendererName == "Table Barchart" use datatables with format style ? how to in shiny
+        if (input$myPivotData$rendererName == "Table Barchart")
+          wdata$renderer="DataTable"
       }
       else if (input$myPivotData$rendererName %in% c("Bar Chart","Stacked Bar Chart")) {
         wdata$bar = (input$myPivotData$rendererName == "Bar Chart")
