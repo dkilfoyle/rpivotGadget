@@ -7,6 +7,7 @@ library(rstudioapi)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(DT)
 
 options(shiny.trace=F)
 quant80 = function(x) quantile(x,0.8)
@@ -51,6 +52,7 @@ rpivotAddin <- function() {
         icon = icon("eye"),
         miniContentPanel(
           conditionalPanel(condition='output.getOutputType=="Table"', tableOutput("table")),
+          conditionalPanel(condition='output.getOutputType=="DataTable"', dataTableOutput("datatable")),
           conditionalPanel(condition='output.getOutputType=="Plot"', plotOutput("plot")),
           conditionalPanel(condition='output.getOutputType=="Text"', verbatimTextOutput("rtext")),
           conditionalPanel(condition='output.getOutputType=="Undefined"', h3("No R conversion defined for this setting"))
@@ -96,6 +98,8 @@ rpivotAddin <- function() {
     output$rtext = renderPrint({
       print(eval(parse(text=input$rcode)))
     })
+
+    output$datatable = renderDataTable(iris)
 
     # EVENTS ==================================
 
