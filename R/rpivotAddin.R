@@ -9,6 +9,8 @@ library(dplyr)
 library(tidyr)
 
 options(shiny.trace=F)
+quant80 = function(x) quantile(x,0.8)
+quant20 = function(x) quantile(x,0.2)
 
 rpivotAddin <- function() {
   ui <- miniPage(
@@ -138,7 +140,7 @@ rpivotAddin <- function() {
       groups = c(unlist(input$myPivotData$rows), unlist(input$myPivotData$cols))
       groups.n = length(groups)
 
-      if (groups.n==0) {        # nothing selected = quit
+      if (groups.n==0) { # nothing selected = quit
         updateAceEditor(session,  "rcode", "# R code will appear here")
         return()
       }
@@ -151,7 +153,7 @@ rpivotAddin <- function() {
         group2       = ifelse(groups.n > 1, groups[2], F),
         group3       = ifelse(groups.n > 2, groups[3], F),
         vals         = paste(input$myPivotData$vals, collapse=","),
-        agg          = c("mean","min","max","sum")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
+        agg          = c("mean","min","max","sum", "quant80", "quant20")[match(input$myPivotData[["aggregatorName"]], c("Average","Minimum","Maximum","Sum"))],
         renderer     = "Undefined",
         rown         = length(input$myPivotData$rows),
         coln         = length(input$myPivotData$cols),
@@ -160,11 +162,10 @@ rpivotAddin <- function() {
 
       if (input$myPivotData$rendererName == "Table") {
         if (input$myPivotData[["aggregatorName"]] == "Count") {
-          wdata$renderer="Table"
-          if (wdata$coln + wdata$rown >2) wdata$renderer = "Text"
+          if (wdata$coln + wdata$rown >2) wdata$renderer = "Text" else wdata$renderer="Table"
           template = whisker.render(tmplTableCount, wdata)
         }
-        else if (input$myPivotData[["aggregatorName"]] %in% c("Average", "Minimum", "Maximum", "Sum")) {
+        else if (!is.na(wdata$agg)) {
           wdata$renderer="Table"
           template = whisker.render(tmplTableAgg, wdata)
         }
