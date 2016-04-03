@@ -13,6 +13,7 @@ options(shiny.trace=F)
 rpivotAddin <- function() {
   ui <- miniPage(
 
+    # css hack to provide space for a select input in the gadgetTitleBar
     tags$head(tags$style(HTML("
       .gadget-title .shiny-input-container {
         position: relative;
@@ -29,7 +30,9 @@ rpivotAddin <- function() {
         editor.resize();
       })')),
 
-    gadgetTitleBar("Pivot Table Gadget", left=miniTitleBarButton("done", "Done", primary=T), right=selectInput("dataset",NULL, choices = getDataFrames())),
+    gadgetTitleBar("Pivot Table Gadget",
+      left=miniTitleBarButton("done", "Done", primary=T),
+      right=selectInput("dataset", NULL, choices = getDataFrames())),
 
     miniTabstripPanel(id = "gadgetTabstrip",
 
