@@ -18,8 +18,9 @@ tmplTableAgg =
 
 tmplBarCount1 =
 '# grouped by {{groupby}}
-ggplot({{df}}, aes(x=as.factor({{group1}}))) +
-  geom_bar()
+ggplot({{df}}, aes(x=as.factor({{group1}}){{#group2}}, fill=as.factor({{group2}}){{\group2}})) +
+  {{#group3}}facet_grid(. ~{{group3}}) + {{\group3}}
+  geom_bar({{#bar}}position="dodge"{{/bar}})
 '
 
 tmplBarCount2 =
