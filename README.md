@@ -10,7 +10,7 @@ This package provide an RStudio add-in wrapper around the [rpivotTable](https://
 - Dropdown box to select R dataframe
 - Experimental attempt to replicate the pivotTable.js c3.js in R/dplyr/ggplot
 
-#### Installation
+### Installation
 
 ```R
 install.packages(c("shiny","miniUI","rstudioapi","ggplot2","dplyr","shinyAce","whisker","tidyr","DT","rpivotTable"))
@@ -21,4 +21,7 @@ Currently depends on a custom version of MiniUI due to a [bug](https://github.co
 
 **update 4/4/16** Now using a javascript hack so you can use the standard CRAN MiniUI
 
+### Useage
 
+- Make sure you have a dataframe on the global environment eg data(iris)
+- Select rpivotGadget from RStudio addins menu (or assign a keyboard shortcut)
