@@ -13,6 +13,7 @@ This package provide an RStudio add-in wrapper around the [rpivotTable](https://
 #### Installation
 
 ```R
+install.packages(c("shiny","miniUI","rstudioapi","ggplot2","dplyr","shinyAce","whisker","tidyr","DT","rpivotTable"))
 devtools::install_github("dkilfoyle/rpivotGadget")
 ```
 
