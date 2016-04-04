@@ -15,6 +15,8 @@ rpivotAddin <- function() {
   library(dplyr)
   library(tidyr)
   library(DT)
+  
+  data(iris) # example dataframe to populate the dropdown
 
   ui <- miniPage(
 
