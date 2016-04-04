@@ -1,19 +1,21 @@
-library(shiny)
-library(rpivotTable)
-library(miniUI)
-library(whisker)
-library(shinyAce)
-library(rstudioapi)
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(DT)
+
 
 options(shiny.trace=F)
 quant80 = function(x) quantile(x,0.8)
 quant20 = function(x) quantile(x,0.2)
 
 rpivotAddin <- function() {
+  library(shiny)
+  library(rpivotTable)
+  library(miniUI)
+  library(whisker)
+  library(shinyAce)
+  library(rstudioapi)
+  library(ggplot2)
+  library(dplyr)
+  library(tidyr)
+  library(DT)
+
   ui <- miniPage(
 
     # css hack to provide space for a select input in the gadgetTitleBar
