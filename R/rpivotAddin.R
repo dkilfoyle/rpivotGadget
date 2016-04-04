@@ -33,6 +33,11 @@ rpivotAddin <- function() {
         editor.resize();
       })')),
 
+    # another hack - this time to fix bug in miniUI that prevents observing tabpanel changes
+    tags$head(tags$script('$(document).ready(function() {
+      $("#gadgetTabstrip").addClass("nav");
+    })')),
+
     gadgetTitleBar("Pivot Table Gadget",
       left=miniTitleBarButton("done", "Done", primary=T),
       right=selectInput("dataset", NULL, choices = getDataFrames())),
