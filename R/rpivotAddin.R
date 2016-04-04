@@ -1,4 +1,4 @@
-
+data(iris) # example dataframe to populate the dropdown in case globalenv is empty
 
 options(shiny.trace=F)
 quant80 = function(x) quantile(x,0.8)
@@ -15,8 +15,6 @@ rpivotAddin <- function() {
   library(dplyr)
   library(tidyr)
   library(DT)
-  
-  data(iris) # example dataframe to populate the dropdown
 
   ui <- miniPage(
 
