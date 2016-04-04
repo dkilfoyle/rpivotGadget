@@ -6,7 +6,7 @@ This package provide an RStudio add-in wrapper around the [rpivotTable](https://
 
 ### Features
 
-- Wraps the excellent [smartinsightsfromdata](https://github.com/smartinsightsfromdata) HTML widget so that it can be accessed from the add-in menu and assigned a hot key
+- Wraps the excellent [smartinsightsfromdata](https://github.com/smartinsightsfromdata) HTML widget so that it can be accessed from the RStudio add-in menu and assigned a hot key
 - Dropdown box to select R dataframe
 - Experimental attempt to replicate the pivotTable.js C3.js in R/dplyr/ggplot
 
