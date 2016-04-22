@@ -21,7 +21,7 @@ Currently depends on a custom version of MiniUI due to a [bug](https://github.co
 
 **update 4/4/16** Now using a javascript hack so you can use the standard CRAN MiniUI
 
-### Useage
+### Usage
 
 - Make sure you have a dataframe on the global environment eg data(iris)
 - Select rpivotGadget from RStudio addins menu (or assign a keyboard shortcut)
