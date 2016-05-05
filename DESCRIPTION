@@ -15,5 +15,6 @@ Imports:
   shinyAce (>= 0.2.1),
   whisker (>= 0.3-2),
   tidyr (>= 0.4.1),
-  DT (>= 0.1)
+  DT (>= 0.1),
+  rpivotTable (>= 0.1.5.7)
 
